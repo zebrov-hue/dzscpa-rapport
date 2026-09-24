@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DZS CPA — Rapport hebdomadaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: #f7f6f3; color: #1a1a1a; font-size: 14px; }
+
+.header {
+  background: #fff;
+  border-bottom: 1px solid #e8e6e1;
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.logo { width: 40px; height: 40px; background: #1a1a1a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; flex-shrink: 0; }
+.firm-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
+.firm-sub { font-size: 0.72rem; color: #999; margin-top: 1px; }
+.header-right { display: flex; gap: 28px; }
+.meta { text-align: right; }
+.meta-label { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbb; margin-bottom: 2px; }
+.meta-value { font-size: 0.82rem; font-weight: 500; }
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  color: #999;
+}
+.spinner {
+  width: 32px; height: 32px;
+  border: 2px solid #e8e6e1;
+  border-top-color: #1a1a1a;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.alert {
+  margin: 20px 40px 0;
+  background: #fff8f6;
+  border: 1px solid #f0c4b8;
+  padding: 14px 18px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.alert.hidden { display: none; }
+.alert-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #c0392b; white-space: nowrap; padding-top: 2px; }
+.alert-content { font-size: 0.8rem; color: #5a1f18; line-height: 1.6; }
+
+.container { max-width: 1060px; margin: 0 auto; padding: 28px 40px 48px; }
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: #e8e6e1;
+  border: 1px solid #e8e6e1;
+  margin-bottom: 28px;
+}
+.kpi { background: #fff; padding: 24px 20px; }
+.kpi-label { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbb; margin-bottom: 10px; }
+.kpi-num { font-size: 2.6rem; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
+.kpi-sub { font-size: 0.7rem; color: #999; margin-top: 6px; }
+.kpi-sub.up { color: #27ae60; }
+.kpi-sub.warn { color: #e67e22; }
+.kpi-sub.danger { color: #c0392b; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+.section { margin-bottom: 20px; }
+.section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1px; padding: 0 2px; }
+.section-title { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999; }
+.section-total { font-size: 0.7rem; color: #bbb; }
+
+.table-wrap { background: #fff; border: 1px solid #e8e6e1; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+thead th { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbb; text-align: left; padding: 10px 18px; border-bottom: 1px solid #e8e6e1; background: #faf9f7; }
+tbody td { padding: 12px 18px; border-bottom: 1px solid #f0ede8; font-size: 0.82rem; vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #faf9f7; }
+.amount { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.muted { color: #999; font-size: 0.75rem; }
+
+.badge { display: inline-block; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 2px; white-space: nowrap; }
+.badge.ok { background: #edf7f0; color: #27ae60; }
+.badge.warn { background: #fef6ec; color: #e67e22; }
+.badge.danger { background: #fdf0ee; color: #c0392b; }
+.badge.neutral { background: #f0f0f0; color: #666; }
+
+.bank-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid #f0ede8; }
+.bank-row:last-child { border-bottom: none; }
+.bank-name { font-size: 0.82rem; }
+
+.deadlines { background: #fff; border: 1px solid #e8e6e1; }
+.deadline-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid #f0ede8; gap: 10px; flex-wrap: wrap; }
+.deadline-row:last-child { border-bottom: none; }
+.deadline-name { font-size: 0.82rem; font-weight: 500; flex: 1; }
+.deadline-date { font-size: 0.72rem; color: #999; }
+.days { font-size: 0.68rem; font-weight: 700; padding: 3px 10px; border-radius: 2px; min-width: 60px; text-align: center; }
+.days.urgent { background: #fdf0ee; color: #c0392b; }
+.days.soon { background: #fef6ec; color: #e67e22; }
+.days.ok { background: #edf7f0; color: #27ae60; }
+
+.notes-box { background: #fff; border: 1px solid #e8e6e1; padding: 18px; font-size: 0.82rem; color: #444; line-height: 1.65; white-space: pre-wrap; }
+
+footer {
+  border-top: 1px solid #e8e6e1;
+  background: #fff;
+  padding: 14px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.footer-brand { font-size: 0.7rem; font-weight: 600; color: #1a1a1a; }
+.footer-brand span { color: #bbb; font-weight: 400; }
+.footer-stamp { font-size: 0.65rem; color: #bbb; }
+
+@media (max-width: 768px) {
+  .header, footer { padding: 16px 20px; }
+  .alert { margin: 16px 20px 0; }
+  .container { padding: 20px 20px 40px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .two-col { grid-template-columns: 1fr; }
+  .kpi-num { font-size: 2rem; }
+  .header-right { gap: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">DZS</div>
+    <div>
+      <div class="firm-name">DZS CPA — David-Zaher Sayah</div>
+      <div class="firm-sub">Comptabilité · Montréal</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="meta">
+      <div class="meta-label">Ressource</div>
+      <div class="meta-value" id="resource">Amal J.</div>
+    </div>
+    <div class="meta">
+      <div class="meta-label">Semaine</div>
+      <div class="meta-value" id="semaine">—</div>
+    </div>
+  </div>
+</div>
+
+<div class="alert hidden" id="alert-box">
+  <div class="alert-label">Urgent</div>
+  <div class="alert-content" id="alert-content"></div>
+</div>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div>Chargement du rapport...</div>
+</div>
+
+<div id="main-content" style="display:none">
+
+  <div class="container">
+
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Factures émises</div>
+        <div class="kpi-num" id="kpi-factures">—</div>
+        <div class="kpi-sub" id="kpi-factures-sub"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Paiements reçus</div>
+        <div class="kpi-num" id="kpi-paiements">—</div>
+        <div class="kpi-sub" id="kpi-paiements-sub"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Dossiers en suspens</div>
+        <div class="kpi-num" id="kpi-suspens">—</div>
+        <div class="kpi-sub warn" id="kpi-suspens-sub"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Aging 60+ jours</div>
+        <div class="kpi-num" id="kpi-aging">—</div>
+        <div class="kpi-sub danger">À surveiller</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+
+      <div class="section">
+        <div class="section-head">
+          <div class="section-title">Comptes clients · A/R</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Activité</th><th>Quantité</th><th>Montant</th></tr></thead>
+            <tbody>
+              <tr><td>Factures émises</td><td id="ar-nb-factures">—</td><td class="amount" id="ar-mt-factures">—</td></tr>
+              <tr><td>Paiements reçus</td><td id="ar-nb-paiements">—</td><td class="amount" id="ar-mt-paiements">—</td></tr>
+              <tr><td>Relances envoyées</td><td id="ar-relances">—</td><td class="amount">—</td></tr>
+              <tr><td>Aging 60+ jours</td><td>—</td><td class="amount" id="ar-aging">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <div class="section-title">Comptes fournisseurs · A/P</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Activité</th><th>Détail</th><th>Statut</th></tr></thead>
+            <tbody>
+              <tr><td>Factures saisies</td><td id="ap-factures">—</td><td><span class="badge ok">Complété</span></td></tr>
+              <tr><td>Paiements effectués</td><td id="ap-paiements">—</td><td><span class="badge ok">Complété</span></td></tr>
+              <tr><td>Anomalies</td><td id="ap-anomalies">—</td><td id="ap-anomalies-badge"></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="two-col">
+
+      <div class="section">
+        <div class="section-head">
+          <div class="section-title">Rapprochement bancaire</div>
+        </div>
+        <div class="table-wrap">
+          <div class="bank-row">
+            <div class="bank-name">Compte chèques</div>
+            <span class="badge" id="bank-cheques">—</span>
+          </div>
+          <div class="bank-row">
+            <div class="bank-name">Carte de crédit corporative</div>
+            <span class="badge" id="bank-carte">—</span>
+          </div>
+          <div class="bank-row">
+            <div class="bank-name">Marge de crédit</div>
+            <span class="badge" id="bank-marge">—</span>
+          </div>
+          <div class="bank-row">
+            <div class="bank-name">Écarts détectés</div>
+            <span id="bank-ecarts" class="muted">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <div class="section-title">Dossiers en suspens</div>
+          <div class="section-total" id="suspens-total"></div>
+        </div>
+        <div class="table-wrap">
+          <div style="padding: 16px 18px;">
+            <div id="suspens-detail" style="font-size: 0.82rem; color: #444; line-height: 1.7; white-space: pre-line;">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">Notes · Amal J.</div>
+      </div>
+      <div class="notes-box" id="notes">—</div>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-brand">DZS CPA <span>· David-Zaher Sayah · Montréal</span></div>
+  <div class="footer-stamp">Propulsé par <strong>Opex House</strong> · Rapport automatique · <span id="generated-at"></span></div>
+</footer>
+
+<script>
+const SHEET_ID = '1-pm3S2grs4-8IOJKfMltNAdOlmTQyDrdG-IkUr5SxFw';
+const SHEET_NAME = 'Réponses au formulaire 1';
+const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+function fmt(val) {
+  if (!val || val === 'empty' || val === '') return '—';
+  return val;
+}
+
+function fmtMoney(val) {
+  if (!val || val === 'empty' || val === '') return '—';
+  const n = parseFloat(val.toString().replace(/[^0-9.]/g, ''));
+  if (isNaN(n)) return val;
+  return n.toLocaleString('fr-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' $';
+}
+
+function bankBadge(reconciledList, accountName) {
+  if (!reconciledList || reconciledList === 'empty') return '<span class="badge neutral">Non renseigné</span>';
+  if (reconciledList.toLowerCase().includes(accountName.toLowerCase())) {
+    return '<span class="badge ok">Réconcilié</span>';
+  }
+  return '<span class="badge neutral">Non fait</span>';
+}
+
+async function loadData() {
+  try {
+    const res = await fetch(URL);
+    const text = await res.text();
+    const json = JSON.parse(text.replace('/*O_o*/', '').replace('google.visualization.Query.setResponse(', '').replace(/\);$/, ''));
+
+    const cols = json.table.cols.map(c => c.label);
+    const rows = json.table.rows;
+
+    if (!rows || rows.length === 0) {
+      document.getElementById('loading').innerHTML = '<div style="color:#999;text-align:center;padding:40px">Aucune donnée disponible.<br>Amal n\'a pas encore soumis de rapport cette semaine.</div>';
+      return;
+    }
+
+    // Prendre la dernière ligne
+    const lastRow = rows[rows.length - 1];
+    const data = {};
+    cols.forEach((col, i) => {
+      const cell = lastRow.c[i];
+      data[col] = cell && cell.v !== null ? cell.v.toString() : '';
+    });
+
+    // Semaine
+    document.getElementById('semaine').textContent = fmt(data['Semaine du']) || 'Cette semaine';
+
+    // Alertes
+    const alertes = data['Points urgents à afficher en rouge (un par ligne)'];
+    if (alertes && alertes !== 'empty' && alertes.trim() !== '') {
+      document.getElementById('alert-box').classList.remove('hidden');
+      document.getElementById('alert-content').textContent = alertes;
+    }
+
+    // KPIs
+    document.getElementById('kpi-factures').textContent = fmt(data['Nombre de factures émises cette semaine']);
+    document.getElementById('kpi-factures-sub').textContent = data['Montant total des factures émises ($)'] ? fmtMoney(data['Montant total des factures émises ($)']) + ' émis' : '';
+
+    document.getElementById('kpi-paiements').textContent = fmt(data['Nombre de paiements clients reçus']);
+    document.getElementById('kpi-paiements-sub').textContent = data['Montant total encaissé ($)'] ? fmtMoney(data['Montant total encaissé ($)']) + ' encaissé' : '';
+
+    document.getElementById('kpi-suspens').textContent = fmt(data['Nombre total de dossiers en suspens']);
+    document.getElementById('kpi-aging').textContent = fmtMoney(data['Montant aging 60+ jours ($)']);
+
+    // A/R
+    document.getElementById('ar-nb-factures').textContent = fmt(data['Nombre de factures émises cette semaine']);
+    document.getElementById('ar-mt-factures').textContent = fmtMoney(data['Montant total des factures émises ($)']);
+    document.getElementById('ar-nb-paiements').textContent = fmt(data['Nombre de paiements clients reçus']);
+    document.getElementById('ar-mt-paiements').textContent = fmtMoney(data['Montant total encaissé ($)']);
+    document.getElementById('ar-relances').textContent = fmt(data['Nombre de relances envoyées']);
+    document.getElementById('ar-aging').textContent = fmtMoney(data['Montant aging 60+ jours ($)']);
+
+    // A/P
+    document.getElementById('ap-factures').textContent = fmt(data['Nombre de factures fournisseurs saisies']);
+    document.getElementById('ap-paiements').textContent = fmtMoney(data['Montant total des paiements fournisseurs ($)']);
+    const anomalies = data['Anomalies détectées (mettre 0 si aucune)'];
+    document.getElementById('ap-anomalies').textContent = fmt(anomalies);
+    const anomBadge = (!anomalies || anomalies === '0' || anomalies === 'empty' || anomalies === 'Aucune')
+      ? '<span class="badge ok">Aucune</span>'
+      : '<span class="badge danger">À traiter</span>';
+    document.getElementById('ap-anomalies-badge').innerHTML = anomBadge;
+
+    // Banque
+    const reconciled = data['Comptes réconciliés cette semaine'] || '';
+    document.getElementById('bank-cheques').outerHTML = bankBadge(reconciled, 'Compte chèques') + '';
+    document.getElementById('bank-carte').outerHTML = bankBadge(reconciled, 'Carte de crédit corporative') + '';
+    document.getElementById('bank-marge').outerHTML = bankBadge(reconciled, 'Marge de crédit') + '';
+
+    // Fix: re-get elements after outerHTML replacement
+    document.querySelectorAll('.bank-row')[0].querySelector('span').outerHTML = bankBadge(reconciled, 'Compte chèques');
+    document.querySelectorAll('.bank-row')[1].querySelector('span').outerHTML = bankBadge(reconciled, 'Carte de crédit corporative');
+    document.querySelectorAll('.bank-row')[2].querySelector('span').outerHTML = bankBadge(reconciled, 'Marge de crédit');
+
+    const ecarts = data['Écarts détectés (montant + description, ou "Aucun")'];
+    document.querySelectorAll('.bank-row')[3].querySelector('span').textContent = fmt(ecarts);
+
+    // Suspens
+    const nbSuspens = data['Nombre total de dossiers en suspens'];
+    document.getElementById('suspens-total').textContent = nbSuspens ? nbSuspens + ' au total' : '';
+    document.getElementById('suspens-detail').textContent = fmt(data['Description des dossiers urgents (un par ligne)']);
+
+    // Notes
+    document.getElementById('notes').textContent = fmt(data['Notes pour David-Zaher']);
+
+    // Date
+    document.getElementById('generated-at').textContent = new Date().toLocaleDateString('fr-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Show
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+
+  } catch (err) {
+    document.getElementById('loading').innerHTML = '<div style="color:#c0392b;text-align:center;padding:40px">Erreur de chargement.<br><small>' + err.message + '</small></div>';
+  }
+}
+
+loadData();
+</script>
+
+</body>
+</html>
