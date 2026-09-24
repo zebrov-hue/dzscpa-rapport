@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DZS CPA — Rapport hebdomadaire</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', sans-serif; background: #f7f6f3; color: #1a1a1a; font-size: 14px; }
@@ -18,58 +19,56 @@ body { font-family: 'Inter', sans-serif; background: #f7f6f3; color: #1a1a1a; fo
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 .header-left { display: flex; align-items: center; gap: 14px; }
 .logo { width: 40px; height: 40px; background: #1a1a1a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; flex-shrink: 0; }
 .firm-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
 .firm-sub { font-size: 0.72rem; color: #999; margin-top: 1px; }
-.header-right { display: flex; gap: 28px; }
+.header-right { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
 .meta { text-align: right; }
 .meta-label { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbb; margin-bottom: 2px; }
 .meta-value { font-size: 0.82rem; font-weight: 500; }
+.week-selector { display: flex; align-items: center; gap: 8px; }
+.week-selector label { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbb; }
+.week-selector select { font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 500; color: #1a1a1a; background: #f7f6f3; border: 1px solid #e8e6e1; padding: 6px 10px; cursor: pointer; outline: none; }
 
-.loading {
+.tabs {
+  background: #fff;
+  border-bottom: 1px solid #e8e6e1;
+  padding: 0 40px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  gap: 16px;
+  gap: 0;
+}
+.tab {
+  padding: 12px 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
   color: #999;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
 }
-.spinner {
-  width: 32px; height: 32px;
-  border: 2px solid #e8e6e1;
-  border-top-color: #1a1a1a;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
+.tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
+.tab:hover { color: #1a1a1a; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; gap: 16px; color: #999; }
+.spinner { width: 28px; height: 28px; border: 2px solid #e8e6e1; border-top-color: #1a1a1a; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.alert {
-  margin: 20px 40px 0;
-  background: #fff8f6;
-  border: 1px solid #f0c4b8;
-  padding: 14px 18px;
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
+.alert { margin: 20px 40px 0; background: #fff8f6; border: 1px solid #f0c4b8; padding: 14px 18px; display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
 .alert.hidden { display: none; }
 .alert-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #c0392b; white-space: nowrap; padding-top: 2px; }
-.alert-content { font-size: 0.8rem; color: #5a1f18; line-height: 1.6; }
+.alert-content { font-size: 0.8rem; color: #5a1f18; line-height: 1.6; white-space: pre-line; }
 
 .container { max-width: 1060px; margin: 0 auto; padding: 28px 40px 48px; }
 
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: #e8e6e1;
-  border: 1px solid #e8e6e1;
-  margin-bottom: 28px;
-}
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #e8e6e1; border: 1px solid #e8e6e1; margin-bottom: 28px; }
 .kpi { background: #fff; padding: 24px 20px; }
 .kpi-label { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbb; margin-bottom: 10px; }
 .kpi-num { font-size: 2.6rem; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
@@ -79,7 +78,6 @@ body { font-family: 'Inter', sans-serif; background: #f7f6f3; color: #1a1a1a; fo
 .kpi-sub.danger { color: #c0392b; }
 
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-
 .section { margin-bottom: 20px; }
 .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1px; padding: 0 2px; }
 .section-title { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999; }
@@ -103,41 +101,50 @@ tbody tr:hover { background: #faf9f7; }
 .bank-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid #f0ede8; }
 .bank-row:last-child { border-bottom: none; }
 .bank-name { font-size: 0.82rem; }
-
-.deadlines { background: #fff; border: 1px solid #e8e6e1; }
-.deadline-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid #f0ede8; gap: 10px; flex-wrap: wrap; }
-.deadline-row:last-child { border-bottom: none; }
-.deadline-name { font-size: 0.82rem; font-weight: 500; flex: 1; }
-.deadline-date { font-size: 0.72rem; color: #999; }
-.days { font-size: 0.68rem; font-weight: 700; padding: 3px 10px; border-radius: 2px; min-width: 60px; text-align: center; }
-.days.urgent { background: #fdf0ee; color: #c0392b; }
-.days.soon { background: #fef6ec; color: #e67e22; }
-.days.ok { background: #edf7f0; color: #27ae60; }
-
 .notes-box { background: #fff; border: 1px solid #e8e6e1; padding: 18px; font-size: 0.82rem; color: #444; line-height: 1.65; white-space: pre-wrap; }
 
-footer {
-  border-top: 1px solid #e8e6e1;
-  background: #fff;
-  padding: 14px 40px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+/* TENDANCES */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.chart-card { background: #fff; border: 1px solid #e8e6e1; padding: 20px; }
+.chart-card.full { grid-column: 1 / -1; }
+.chart-title { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999; margin-bottom: 4px; }
+.chart-sub { font-size: 0.72rem; color: #bbb; margin-bottom: 16px; }
+.chart-wrap { position: relative; height: 200px; }
+.chart-wrap.tall { height: 260px; }
+
+.perf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #e8e6e1; border: 1px solid #e8e6e1; margin-bottom: 20px; }
+.perf-card { background: #fff; padding: 20px; }
+.perf-label { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbb; margin-bottom: 8px; }
+.perf-num { font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; }
+.perf-num.ok { color: #27ae60; }
+.perf-num.warn { color: #e67e22; }
+.perf-num.danger { color: #c0392b; }
+.perf-sub { font-size: 0.7rem; color: #999; margin-top: 4px; }
+
+.insight-box { background: #fff; border: 1px solid #e8e6e1; padding: 20px; margin-bottom: 20px; }
+.insight-title { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #999; margin-bottom: 12px; }
+.insight-list { display: flex; flex-direction: column; gap: 8px; }
+.insight-item { display: flex; align-items: flex-start; gap: 10px; font-size: 0.82rem; color: #444; line-height: 1.5; }
+.insight-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+.insight-dot.ok { background: #27ae60; }
+.insight-dot.warn { background: #e67e22; }
+.insight-dot.danger { background: #c0392b; }
+
+.no-data { text-align: center; padding: 40px; color: #bbb; font-size: 0.82rem; }
+
+footer { border-top: 1px solid #e8e6e1; background: #fff; padding: 14px 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
 .footer-brand { font-size: 0.7rem; font-weight: 600; color: #1a1a1a; }
 .footer-brand span { color: #bbb; font-weight: 400; }
 .footer-stamp { font-size: 0.65rem; color: #bbb; }
 
 @media (max-width: 768px) {
-  .header, footer { padding: 16px 20px; }
+  .header, footer, .tabs { padding-left: 20px; padding-right: 20px; }
   .alert { margin: 16px 20px 0; }
   .container { padding: 20px 20px 40px; }
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-grid, .charts-grid, .perf-grid { grid-template-columns: repeat(2, 1fr); }
   .two-col { grid-template-columns: 1fr; }
   .kpi-num { font-size: 2rem; }
-  .header-right { gap: 16px; }
+  .chart-card.full { grid-column: 1; }
 }
 </style>
 </head>
@@ -154,29 +161,36 @@ footer {
   <div class="header-right">
     <div class="meta">
       <div class="meta-label">Ressource</div>
-      <div class="meta-value" id="resource">Amal J.</div>
+      <div class="meta-value">Amal J.</div>
     </div>
-    <div class="meta">
-      <div class="meta-label">Semaine</div>
-      <div class="meta-value" id="semaine">—</div>
+    <div class="week-selector">
+      <label>Semaine</label>
+      <select id="week-select" onchange="loadWeek(parseInt(this.value))">
+        <option>Chargement...</option>
+      </select>
     </div>
   </div>
 </div>
 
-<div class="alert hidden" id="alert-box">
-  <div class="alert-label">Urgent</div>
-  <div class="alert-content" id="alert-content"></div>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('rapport')">Rapport de la semaine</div>
+  <div class="tab" onclick="switchTab('tendances')">Tendances</div>
 </div>
 
 <div class="loading" id="loading">
   <div class="spinner"></div>
-  <div>Chargement du rapport...</div>
+  <div>Chargement des données...</div>
 </div>
 
-<div id="main-content" style="display:none">
+<!-- ONGLET RAPPORT -->
+<div class="tab-content active" id="tab-rapport" style="display:none">
+
+  <div class="alert hidden" id="alert-box">
+    <div class="alert-label">Urgent</div>
+    <div class="alert-content" id="alert-content"></div>
+  </div>
 
   <div class="container">
-
     <div class="kpi-grid">
       <div class="kpi">
         <div class="kpi-label">Factures émises</div>
@@ -191,7 +205,7 @@ footer {
       <div class="kpi">
         <div class="kpi-label">Dossiers en suspens</div>
         <div class="kpi-num" id="kpi-suspens">—</div>
-        <div class="kpi-sub warn" id="kpi-suspens-sub"></div>
+        <div class="kpi-sub warn"></div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Aging 60+ jours</div>
@@ -201,219 +215,379 @@ footer {
     </div>
 
     <div class="two-col">
-
       <div class="section">
-        <div class="section-head">
-          <div class="section-title">Comptes clients · A/R</div>
-        </div>
+        <div class="section-head"><div class="section-title">Comptes clients · A/R</div></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Activité</th><th>Quantité</th><th>Montant</th></tr></thead>
+            <thead><tr><th>Tâche</th><th>Quantité</th><th>Montant</th></tr></thead>
             <tbody>
-              <tr><td>Factures émises</td><td id="ar-nb-factures">—</td><td class="amount" id="ar-mt-factures">—</td></tr>
-              <tr><td>Paiements reçus</td><td id="ar-nb-paiements">—</td><td class="amount" id="ar-mt-paiements">—</td></tr>
-              <tr><td>Relances envoyées</td><td id="ar-relances">—</td><td class="amount">—</td></tr>
+              <tr><td>Factures émises</td><td id="ar-nb-f">—</td><td class="amount" id="ar-mt-f">—</td></tr>
+              <tr><td>Paiements reçus</td><td id="ar-nb-p">—</td><td class="amount" id="ar-mt-p">—</td></tr>
+              <tr><td>Relances envoyées</td><td id="ar-rel">—</td><td class="amount">—</td></tr>
               <tr><td>Aging 60+ jours</td><td>—</td><td class="amount" id="ar-aging">—</td></tr>
             </tbody>
           </table>
         </div>
       </div>
-
       <div class="section">
-        <div class="section-head">
-          <div class="section-title">Comptes fournisseurs · A/P</div>
-        </div>
+        <div class="section-head"><div class="section-title">Comptes fournisseurs · A/P</div></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Activité</th><th>Détail</th><th>Statut</th></tr></thead>
+            <thead><tr><th>Tâche</th><th>Détail</th><th>Statut</th></tr></thead>
             <tbody>
-              <tr><td>Factures saisies</td><td id="ap-factures">—</td><td><span class="badge ok">Complété</span></td></tr>
-              <tr><td>Paiements effectués</td><td id="ap-paiements">—</td><td><span class="badge ok">Complété</span></td></tr>
-              <tr><td>Anomalies</td><td id="ap-anomalies">—</td><td id="ap-anomalies-badge"></td></tr>
+              <tr><td>Factures saisies</td><td id="ap-f">—</td><td><span class="badge ok">Complété</span></td></tr>
+              <tr><td>Paiements effectués</td><td id="ap-p">—</td><td><span class="badge ok">Complété</span></td></tr>
+              <tr><td>Anomalies</td><td id="ap-a">—</td><td id="ap-a-badge"></td></tr>
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
 
     <div class="two-col">
-
       <div class="section">
-        <div class="section-head">
-          <div class="section-title">Rapprochement bancaire</div>
-        </div>
+        <div class="section-head"><div class="section-title">Rapprochement bancaire</div></div>
         <div class="table-wrap">
-          <div class="bank-row">
-            <div class="bank-name">Compte chèques</div>
-            <span class="badge" id="bank-cheques">—</span>
-          </div>
-          <div class="bank-row">
-            <div class="bank-name">Carte de crédit corporative</div>
-            <span class="badge" id="bank-carte">—</span>
-          </div>
-          <div class="bank-row">
-            <div class="bank-name">Marge de crédit</div>
-            <span class="badge" id="bank-marge">—</span>
-          </div>
-          <div class="bank-row">
-            <div class="bank-name">Écarts détectés</div>
-            <span id="bank-ecarts" class="muted">—</span>
-          </div>
+          <div class="bank-row"><div class="bank-name">Compte chèques</div><span id="bank-1" class="badge neutral">—</span></div>
+          <div class="bank-row"><div class="bank-name">Carte de crédit corporative</div><span id="bank-2" class="badge neutral">—</span></div>
+          <div class="bank-row"><div class="bank-name">Marge de crédit</div><span id="bank-3" class="badge neutral">—</span></div>
+          <div class="bank-row"><div class="bank-name">Écarts détectés</div><span id="bank-ecarts" class="muted">—</span></div>
         </div>
       </div>
-
       <div class="section">
         <div class="section-head">
           <div class="section-title">Dossiers en suspens</div>
           <div class="section-total" id="suspens-total"></div>
         </div>
         <div class="table-wrap">
-          <div style="padding: 16px 18px;">
-            <div id="suspens-detail" style="font-size: 0.82rem; color: #444; line-height: 1.7; white-space: pre-line;">—</div>
+          <div style="padding:16px 18px">
+            <div id="suspens-detail" style="font-size:0.82rem;color:#444;line-height:1.7;white-space:pre-line">—</div>
           </div>
         </div>
       </div>
-
     </div>
 
     <div class="section">
-      <div class="section-head">
-        <div class="section-title">Notes · Amal J.</div>
-      </div>
+      <div class="section-head"><div class="section-title">Notes · Amal J.</div></div>
       <div class="notes-box" id="notes">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ONGLET TENDANCES -->
+<div class="tab-content" id="tab-tendances" style="display:none">
+  <div class="container">
+
+    <div class="perf-grid" id="perf-grid">
+      <div class="perf-card">
+        <div class="perf-label">Taux de complétion moyen</div>
+        <div class="perf-num" id="perf-completion">—</div>
+        <div class="perf-sub">Factures émises vs paiements reçus</div>
+      </div>
+      <div class="perf-card">
+        <div class="perf-label">Rapprochements complétés</div>
+        <div class="perf-num" id="perf-reconciliation">—</div>
+        <div class="perf-sub">Semaines avec 3/3 comptes réconciliés</div>
+      </div>
+      <div class="perf-card">
+        <div class="perf-label">Anomalies détectées</div>
+        <div class="perf-num ok" id="perf-anomalies">—</div>
+        <div class="perf-sub">Total depuis le début — signe de vigilance</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card full">
+        <div class="chart-title">Activité A/R — Factures émises vs Paiements encaissés</div>
+        <div class="chart-sub">Semaine par semaine · En nombre de transactions</div>
+        <div class="chart-wrap tall"><canvas id="chart-ar"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Aging 60+ jours</div>
+        <div class="chart-sub">Évolution du risque de créances en retard ($)</div>
+        <div class="chart-wrap"><canvas id="chart-aging"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Dossiers en suspens</div>
+        <div class="chart-sub">Nombre total semaine par semaine</div>
+        <div class="chart-wrap"><canvas id="chart-suspens"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Relances clients envoyées</div>
+        <div class="chart-sub">Suivi du recouvrement actif</div>
+        <div class="chart-wrap"><canvas id="chart-relances"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Anomalies détectées</div>
+        <div class="chart-sub">Vigilance d'Amal sur les écarts et doublons</div>
+        <div class="chart-wrap"><canvas id="chart-anomalies"></canvas></div>
+      </div>
+    </div>
+
+    <div class="insight-box" id="insights-box">
+      <div class="insight-title">Observations automatiques</div>
+      <div class="insight-list" id="insights-list">
+        <div class="no-data">Chargement des observations...</div>
+      </div>
     </div>
 
   </div>
-
 </div>
 
 <footer>
   <div class="footer-brand">DZS CPA <span>· David-Zaher Sayah · Montréal</span></div>
-  <div class="footer-stamp">Propulsé par <strong>Opex House</strong> · Rapport automatique · <span id="generated-at"></span></div>
+  <div class="footer-stamp">Propulsé par <strong>Opex House</strong> · <span id="generated-at"></span></div>
 </footer>
 
 <script>
 const SHEET_ID = '1-pm3S2grs4-8IOJKfMltNAdOlmTQyDrdG-IkUr5SxFw';
-const SHEET_NAME = 'Réponses au formulaire 1';
-const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
-function fmt(val) {
-  if (!val || val === 'empty' || val === '') return '—';
-  return val;
+let allRows = [], headers = [], charts = {};
+
+// Tab switching
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => { t.style.display='none'; t.classList.remove('active'); });
+  document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+  const el = document.getElementById('tab-' + tab);
+  el.style.display = 'block'; el.classList.add('active');
+  if (tab === 'tendances' && allRows.length > 0) renderTendances();
 }
 
-function fmtMoney(val) {
-  if (!val || val === 'empty' || val === '') return '—';
-  const n = parseFloat(val.toString().replace(/[^0-9.]/g, ''));
-  if (isNaN(n)) return val;
-  return n.toLocaleString('fr-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' $';
+function fmt(v) { return (!v || v.trim() === '' || v.trim().toLowerCase() === 'empty') ? '—' : v.trim(); }
+
+function fmtM(v) {
+  if (!v || v.trim() === '' || v.trim().toLowerCase() === 'empty') return '—';
+  const n = parseFloat(v.replace(/[^0-9.]/g, ''));
+  return isNaN(n) ? v : n.toLocaleString('fr-CA', {minimumFractionDigits:0}) + ' $';
 }
 
-function bankBadge(reconciledList, accountName) {
-  if (!reconciledList || reconciledList === 'empty') return '<span class="badge neutral">Non renseigné</span>';
-  if (reconciledList.toLowerCase().includes(accountName.toLowerCase())) {
-    return '<span class="badge ok">Réconcilié</span>';
+function getCol(row, keyword) {
+  const idx = headers.findIndex(h => h.toLowerCase().includes(keyword.toLowerCase()));
+  return idx >= 0 ? (row[idx] || '').trim() : '';
+}
+
+function num(v) { const n = parseFloat((v||'').replace(/[^0-9.]/g,'')); return isNaN(n) ? 0 : n; }
+
+function setBadge(id, list, name) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (list && list.toLowerCase().includes(name.toLowerCase())) {
+    el.className = 'badge ok'; el.textContent = 'Réconcilié';
+  } else { el.className = 'badge neutral'; el.textContent = 'Non fait'; }
+}
+
+function renderWeek(idx) {
+  const row = allRows[idx];
+  if (!row) return;
+
+  const alertes = getCol(row, 'Points urgents');
+  const alertBox = document.getElementById('alert-box');
+  if (alertes && alertes !== 'empty' && alertes.trim()) {
+    alertBox.classList.remove('hidden');
+    document.getElementById('alert-content').textContent = alertes;
+  } else { alertBox.classList.add('hidden'); }
+
+  const nbF = fmt(getCol(row, 'Nombre de factures émises'));
+  const mtF = fmtM(getCol(row, 'Montant total des factures émises'));
+  const nbP = fmt(getCol(row, 'Nombre de paiements clients'));
+  const mtP = fmtM(getCol(row, 'Montant total encaissé'));
+  const susp = fmt(getCol(row, 'Nombre total de dossiers'));
+  const aging = fmtM(getCol(row, 'Montant aging'));
+
+  document.getElementById('kpi-factures').textContent = nbF;
+  document.getElementById('kpi-factures-sub').textContent = mtF !== '—' ? mtF + ' émis' : '';
+  document.getElementById('kpi-paiements').textContent = nbP;
+  document.getElementById('kpi-paiements-sub').textContent = mtP !== '—' ? mtP + ' encaissé' : '';
+  document.getElementById('kpi-suspens').textContent = susp;
+  document.getElementById('kpi-aging').textContent = aging;
+
+  document.getElementById('ar-nb-f').textContent = nbF;
+  document.getElementById('ar-mt-f').textContent = mtF;
+  document.getElementById('ar-nb-p').textContent = nbP;
+  document.getElementById('ar-mt-p').textContent = mtP;
+  document.getElementById('ar-rel').textContent = fmt(getCol(row, 'Nombre de relances'));
+  document.getElementById('ar-aging').textContent = aging;
+
+  document.getElementById('ap-f').textContent = fmt(getCol(row, 'Nombre de factures fournisseurs'));
+  document.getElementById('ap-p').textContent = fmtM(getCol(row, 'Montant total des paiements fournisseurs'));
+  const anom = getCol(row, 'Anomalies');
+  document.getElementById('ap-a').textContent = fmt(anom);
+  document.getElementById('ap-a-badge').innerHTML = (!anom || anom === '0' || anom.toLowerCase() === 'aucune')
+    ? '<span class="badge ok">Aucune</span>' : '<span class="badge danger">À traiter</span>';
+
+  const rec = getCol(row, 'Comptes réconciliés');
+  setBadge('bank-1', rec, 'Compte chèques');
+  setBadge('bank-2', rec, 'Carte de crédit');
+  setBadge('bank-3', rec, 'Marge de crédit');
+  document.getElementById('bank-ecarts').textContent = fmt(getCol(row, 'Écarts détectés'));
+
+  document.getElementById('suspens-total').textContent = susp !== '—' ? susp + ' au total' : '';
+  document.getElementById('suspens-detail').textContent = fmt(getCol(row, 'Description des dossiers urgents'));
+  document.getElementById('notes').textContent = fmt(getCol(row, 'Notes pour David'));
+  document.getElementById('generated-at').textContent = 'Semaine du ' + (getCol(row, 'Semaine du') || '—');
+}
+
+function loadWeek(idx) { renderWeek(idx); }
+
+function makeChart(id, type, labels, datasets, opts = {}) {
+  if (charts[id]) { charts[id].destroy(); }
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  charts[id] = new Chart(ctx, {
+    type,
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: datasets.length > 1, labels: { font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 16 } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 }, color: '#bbb' } },
+        y: { grid: { color: '#f0ede8' }, ticks: { font: { family: 'Inter', size: 10 }, color: '#bbb' }, beginAtZero: true, ...opts }
+      },
+      ...opts.chartOpts
+    }
+  });
+}
+
+function renderTendances() {
+  const labels = allRows.map(r => getCol(r, 'Semaine du') || '—');
+  const nbFactures = allRows.map(r => num(getCol(r, 'Nombre de factures émises')));
+  const nbPaiements = allRows.map(r => num(getCol(r, 'Nombre de paiements clients')));
+  const agingVals = allRows.map(r => num(getCol(r, 'Montant aging')));
+  const suspensVals = allRows.map(r => num(getCol(r, 'Nombre total de dossiers')));
+  const relancesVals = allRows.map(r => num(getCol(r, 'Nombre de relances')));
+  const anomVals = allRows.map(r => {
+    const v = getCol(r, 'Anomalies');
+    return (!v || v === '0' || v.toLowerCase() === 'aucune' || v.toLowerCase() === 'empty') ? 0 : 1;
+  });
+
+  // Chart A/R
+  makeChart('chart-ar', 'bar', labels, [
+    { label: 'Factures émises', data: nbFactures, backgroundColor: '#1a1a1a', borderRadius: 3 },
+    { label: 'Paiements reçus', data: nbPaiements, backgroundColor: '#e8e6e1', borderRadius: 3 }
+  ]);
+
+  // Chart aging
+  makeChart('chart-aging', 'line', labels, [{
+    label: 'Aging 60+', data: agingVals, borderColor: '#c0392b', backgroundColor: 'rgba(192,57,43,0.06)', tension: 0.3, fill: true, pointRadius: 4, pointBackgroundColor: '#c0392b'
+  }]);
+
+  // Chart suspens
+  makeChart('chart-suspens', 'line', labels, [{
+    label: 'Dossiers en suspens', data: suspensVals, borderColor: '#e67e22', backgroundColor: 'rgba(230,126,34,0.06)', tension: 0.3, fill: true, pointRadius: 4, pointBackgroundColor: '#e67e22'
+  }]);
+
+  // Chart relances
+  makeChart('chart-relances', 'bar', labels, [{
+    label: 'Relances', data: relancesVals, backgroundColor: '#2980b9', borderRadius: 3
+  }]);
+
+  // Chart anomalies
+  makeChart('chart-anomalies', 'bar', labels, [{
+    label: 'Anomalies', data: anomVals, backgroundColor: '#27ae60', borderRadius: 3
+  }], { chartOpts: { scales: { y: { ticks: { stepSize: 1 }, grid: { color: '#f0ede8' } } } } });
+
+  // Indicateurs
+  const totalSemaines = allRows.length;
+  const semCompletes = allRows.filter(r => {
+    const rec = getCol(r, 'Comptes réconciliés');
+    return rec.includes('Compte chèques') && rec.includes('Carte de crédit') && rec.includes('Marge de crédit');
+  }).length;
+  const totalAnom = anomVals.reduce((a, b) => a + b, 0);
+  const avgCompletion = totalSemaines > 0
+    ? Math.round(nbPaiements.reduce((a,b)=>a+b,0) / Math.max(nbFactures.reduce((a,b)=>a+b,0),1) * 100)
+    : 0;
+
+  const compEl = document.getElementById('perf-completion');
+  compEl.textContent = avgCompletion + '%';
+  compEl.className = 'perf-num ' + (avgCompletion >= 80 ? 'ok' : avgCompletion >= 60 ? 'warn' : 'danger');
+
+  const recEl = document.getElementById('perf-reconciliation');
+  recEl.textContent = semCompletes + '/' + totalSemaines;
+  recEl.className = 'perf-num ' + (semCompletes === totalSemaines ? 'ok' : semCompletes >= totalSemaines * 0.8 ? 'warn' : 'danger');
+
+  document.getElementById('perf-anomalies').textContent = totalAnom;
+
+  // Observations automatiques
+  const insights = [];
+  const lastAging = agingVals[agingVals.length - 1];
+  const prevAging = agingVals.length > 1 ? agingVals[agingVals.length - 2] : 0;
+  if (lastAging > prevAging && lastAging > 0) insights.push({ type: 'warn', text: `L'aging 60+ jours a augmenté cette semaine (${fmtM(String(lastAging))}). Les relances doivent être intensifiées.` });
+  else if (lastAging < prevAging) insights.push({ type: 'ok', text: `L'aging 60+ jours est en baisse — le recouvrement progresse bien.` });
+
+  const lastSusp = suspensVals[suspensVals.length - 1];
+  const prevSusp = suspensVals.length > 1 ? suspensVals[suspensVals.length - 2] : 0;
+  if (lastSusp > prevSusp) insights.push({ type: 'warn', text: `Les dossiers en suspens ont augmenté (${lastSusp} vs ${prevSusp} la semaine dernière). Des documents clients manquants sont probablement en cause.` });
+  else if (lastSusp < prevSusp) insights.push({ type: 'ok', text: `Bonne résolution des dossiers en suspens cette semaine (${lastSusp} vs ${prevSusp}).` });
+
+  if (avgCompletion >= 80) insights.push({ type: 'ok', text: `Taux de recouvrement moyen de ${avgCompletion}% — la gestion A/R est efficace.` });
+  else insights.push({ type: 'warn', text: `Taux de recouvrement de ${avgCompletion}% — à surveiller sur les prochaines semaines.` });
+
+  if (semCompletes === totalSemaines) insights.push({ type: 'ok', text: `Rapprochements bancaires complétés toutes les semaines. Aucune lacune détectée.` });
+  else insights.push({ type: 'warn', text: `Rapprochements incomplets sur ${totalSemaines - semCompletes} semaine(s). Vérifier les comptes non réconciliés.` });
+
+  if (totalAnom > 0) insights.push({ type: 'ok', text: `${totalAnom} anomalie(s) détectée(s) par Amal depuis le début — signe de vigilance dans le contrôle des écarts.` });
+
+  const insightsList = document.getElementById('insights-list');
+  if (insights.length === 0) {
+    insightsList.innerHTML = '<div class="no-data">Pas assez de données pour générer des observations. Continuez à soumettre des rapports hebdomadaires.</div>';
+  } else {
+    insightsList.innerHTML = insights.map(i =>
+      `<div class="insight-item"><div class="insight-dot ${i.type}"></div><div>${i.text}</div></div>`
+    ).join('');
   }
-  return '<span class="badge neutral">Non fait</span>';
 }
 
-async function loadData() {
+function parseCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  function parseLine(line) {
+    const res = []; let cur = '', inQ = false;
+    for (let c of line) {
+      if (c === '"') inQ = !inQ;
+      else if (c === ',' && !inQ) { res.push(cur.trim()); cur = ''; }
+      else cur += c;
+    }
+    res.push(cur.trim());
+    return res;
+  }
+  return { headers: parseLine(lines[0]), rows: lines.slice(1).map(parseLine) };
+}
+
+async function init() {
   try {
-    const res = await fetch(URL);
+    const res = await fetch(CSV_URL);
     const text = await res.text();
-    const json = JSON.parse(text.replace('/*O_o*/', '').replace('google.visualization.Query.setResponse(', '').replace(/\);$/, ''));
+    const parsed = parseCSV(text);
+    headers = parsed.headers;
+    allRows = parsed.rows;
 
-    const cols = json.table.cols.map(c => c.label);
-    const rows = json.table.rows;
-
-    if (!rows || rows.length === 0) {
-      document.getElementById('loading').innerHTML = '<div style="color:#999;text-align:center;padding:40px">Aucune donnée disponible.<br>Amal n\'a pas encore soumis de rapport cette semaine.</div>';
+    if (allRows.length === 0) {
+      document.getElementById('loading').innerHTML = '<div style="color:#999;text-align:center;padding:40px">Aucune donnée disponible.<br>Amal n\'a pas encore soumis de rapport.</div>';
       return;
     }
 
-    // Prendre la dernière ligne
-    const lastRow = rows[rows.length - 1];
-    const data = {};
-    cols.forEach((col, i) => {
-      const cell = lastRow.c[i];
-      data[col] = cell && cell.v !== null ? cell.v.toString() : '';
+    const select = document.getElementById('week-select');
+    select.innerHTML = '';
+    allRows.forEach((row, i) => {
+      const sem = getCol(row, 'Semaine du') || `Rapport ${i+1}`;
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = sem;
+      if (i === allRows.length - 1) opt.selected = true;
+      select.appendChild(opt);
     });
 
-    // Semaine
-    document.getElementById('semaine').textContent = fmt(data['Semaine du']) || 'Cette semaine';
-
-    // Alertes
-    const alertes = data['Points urgents à afficher en rouge (un par ligne)'];
-    if (alertes && alertes !== 'empty' && alertes.trim() !== '') {
-      document.getElementById('alert-box').classList.remove('hidden');
-      document.getElementById('alert-content').textContent = alertes;
-    }
-
-    // KPIs
-    document.getElementById('kpi-factures').textContent = fmt(data['Nombre de factures émises cette semaine']);
-    document.getElementById('kpi-factures-sub').textContent = data['Montant total des factures émises ($)'] ? fmtMoney(data['Montant total des factures émises ($)']) + ' émis' : '';
-
-    document.getElementById('kpi-paiements').textContent = fmt(data['Nombre de paiements clients reçus']);
-    document.getElementById('kpi-paiements-sub').textContent = data['Montant total encaissé ($)'] ? fmtMoney(data['Montant total encaissé ($)']) + ' encaissé' : '';
-
-    document.getElementById('kpi-suspens').textContent = fmt(data['Nombre total de dossiers en suspens']);
-    document.getElementById('kpi-aging').textContent = fmtMoney(data['Montant aging 60+ jours ($)']);
-
-    // A/R
-    document.getElementById('ar-nb-factures').textContent = fmt(data['Nombre de factures émises cette semaine']);
-    document.getElementById('ar-mt-factures').textContent = fmtMoney(data['Montant total des factures émises ($)']);
-    document.getElementById('ar-nb-paiements').textContent = fmt(data['Nombre de paiements clients reçus']);
-    document.getElementById('ar-mt-paiements').textContent = fmtMoney(data['Montant total encaissé ($)']);
-    document.getElementById('ar-relances').textContent = fmt(data['Nombre de relances envoyées']);
-    document.getElementById('ar-aging').textContent = fmtMoney(data['Montant aging 60+ jours ($)']);
-
-    // A/P
-    document.getElementById('ap-factures').textContent = fmt(data['Nombre de factures fournisseurs saisies']);
-    document.getElementById('ap-paiements').textContent = fmtMoney(data['Montant total des paiements fournisseurs ($)']);
-    const anomalies = data['Anomalies détectées (mettre 0 si aucune)'];
-    document.getElementById('ap-anomalies').textContent = fmt(anomalies);
-    const anomBadge = (!anomalies || anomalies === '0' || anomalies === 'empty' || anomalies === 'Aucune')
-      ? '<span class="badge ok">Aucune</span>'
-      : '<span class="badge danger">À traiter</span>';
-    document.getElementById('ap-anomalies-badge').innerHTML = anomBadge;
-
-    // Banque
-    const reconciled = data['Comptes réconciliés cette semaine'] || '';
-    document.getElementById('bank-cheques').outerHTML = bankBadge(reconciled, 'Compte chèques') + '';
-    document.getElementById('bank-carte').outerHTML = bankBadge(reconciled, 'Carte de crédit corporative') + '';
-    document.getElementById('bank-marge').outerHTML = bankBadge(reconciled, 'Marge de crédit') + '';
-
-    // Fix: re-get elements after outerHTML replacement
-    document.querySelectorAll('.bank-row')[0].querySelector('span').outerHTML = bankBadge(reconciled, 'Compte chèques');
-    document.querySelectorAll('.bank-row')[1].querySelector('span').outerHTML = bankBadge(reconciled, 'Carte de crédit corporative');
-    document.querySelectorAll('.bank-row')[2].querySelector('span').outerHTML = bankBadge(reconciled, 'Marge de crédit');
-
-    const ecarts = data['Écarts détectés (montant + description, ou "Aucun")'];
-    document.querySelectorAll('.bank-row')[3].querySelector('span').textContent = fmt(ecarts);
-
-    // Suspens
-    const nbSuspens = data['Nombre total de dossiers en suspens'];
-    document.getElementById('suspens-total').textContent = nbSuspens ? nbSuspens + ' au total' : '';
-    document.getElementById('suspens-detail').textContent = fmt(data['Description des dossiers urgents (un par ligne)']);
-
-    // Notes
-    document.getElementById('notes').textContent = fmt(data['Notes pour David-Zaher']);
-
-    // Date
-    document.getElementById('generated-at').textContent = new Date().toLocaleDateString('fr-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-    // Show
     document.getElementById('loading').style.display = 'none';
-    document.getElementById('main-content').style.display = 'block';
+    document.getElementById('tab-rapport').style.display = 'block';
+    renderWeek(allRows.length - 1);
 
   } catch (err) {
-    document.getElementById('loading').innerHTML = '<div style="color:#c0392b;text-align:center;padding:40px">Erreur de chargement.<br><small>' + err.message + '</small></div>';
+    document.getElementById('loading').innerHTML = `<div style="color:#c0392b;text-align:center;padding:40px">Erreur de chargement.<br><small>${err.message}</small></div>`;
   }
 }
 
-loadData();
+init();
 </script>
-
 </body>
 </html>
